@@ -411,6 +411,53 @@ if standard_file and sample_file:
             "별도로 확인해야 합니다."
         )
 
+
+                # 샘플별 평균 농도 막대그래프와 SD 오차 막대
+        st.subheader("샘플별 농도 막대그래프")
+
+        plot_df = result.dropna(subset=["Mean"]).copy()
+
+        if plot_df.empty:
+            st.warning("그래프로 표시할 유효한 샘플 농도가 없습니다.")
+        else:
+            fig, ax = plt.subplots(figsize=(max(8, len(plot_df) * 0.7), 5))
+
+            x_positions = np.arange(len(plot_df))
+            means = plot_df["Mean"].to_numpy(dtype=float)
+
+            # 반복값이 하나뿐이면 SD가 NaN일 수 있어 오차 막대를 생략
+            sd_values = (
+                pd.to_numeric(plot_df["SD"], errors="coerce")
+                .fillna(0)
+                .to_numpy(dtype=float)
+            )
+
+            ax.bar(
+                x_positions,
+                means,
+                yerr=sd_values,
+                capsize=4,
+                color="steelblue",
+                edgecolor="black",
+                alpha=0.85,
+            )
+
+            ax.set_xticks(x_positions)
+            ax.set_xticklabels(
+                plot_df["Sample"].astype(str),
+                rotation=45,
+                ha="right",
+            )
+            ax.set_xlabel("Sample")
+            ax.set_ylabel("Concentration")
+            ax.set_title("Sample Concentration (Mean ± SD)")
+            ax.grid(axis="y", alpha=0.25)
+
+            fig.tight_layout()
+            st.pyplot(fig)
+            plt.close(fig)
+
+        
         # Excel 다운로드
         st.download_button(
             label="분석 결과 Excel 다운로드",
